@@ -18,7 +18,12 @@ def keyHandler(self, evt, _old):
     key = unicode(evt.text())
     if key == "8" or key == "9" or key == "0":
         q = aqt.mw.reviewer.card.q()
-        encoded = q[q.rfind(">") + 1:].encode('utf8', 'ignore') # search term is the portion of card.q() following the last occurrence of ">"
+        start_index = q.rfind(">") + 1
+        end_index = q.rfind("(")
+        if end_index <= start_index: # then final "(" occurs before end of styling (if there are no occurrences then rfind returns -1)
+        	encoded = q[start_index:].encode('utf8', 'ignore') # search term is the portion of card.q() following the last occurrence of ">"
+        else:
+        	encoded = q[start_index : end_index].encode('utf8', 'ignore')
         if key == "8":
         	search = SEARCH_URL
         elif key == "9":
