@@ -1,27 +1,32 @@
 """
 An add-on that provides extra functionality for studying Japanese using Anki.
+
 Press 8 to search Jisho.org for the text in the question field of the current card.
 Press 9 to search Jisho for sentences containing the question text.
 Press 0 to search Jisho for kanji details for the question text.
+
+Also adds option in context menu to search Jisho for the currently highlighted text.
+(I used the 'Search Google Images for selected words' add-on as a starting point: https://ankiweb.net/shared/info/800190862)
 """
 
 SEARCH_URL = 'http://jisho.org/search/%s'
 SEARCH_SENTENCES_URL = 'http://jisho.org/search/%s%%20%%23sentences'
 SEARCH_KANJI_DETAILS_URL = 'http://jisho.org/search/%s%%20%%23kanji'
 
-import aqt.qt
+from aqt import reviewer, mw
+from aqt.webview import AnkiWebView
+from aqt.qt import *
+from aqt.utils import tooltip
 import anki.hooks
-import aqt.reviewer
 import urllib
-# from Tkinter import * # TODO: figure this out
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
     if key == "8" or key == "9" or key == "0":
-        q = aqt.mw.reviewer.card.q()
+        q = mw.reviewer.card.q()
         start_index = q.rfind(">") + 1
         question = q[start_index:]
-
+        
         """
         unicode ranges:
         (excludes punctuation)
@@ -46,15 +51,46 @@ def keyHandler(self, evt, _old):
         	search = SEARCH_SENTENCES_URL
         else:
         	search = SEARCH_KANJI_DETAILS_URL
-        url = aqt.qt.QUrl.fromEncoded(search % (urllib.quote(encoded)))
-        aqt.qt.QDesktopServices.openUrl(url)
-    # elif key == "7":
-    # 	clipb = Tk()
-    # 	q = clipb.selection_get(selection == "CLIPBOARD")
-    # 	encoded = q.encode('utf8', 'ignore')
-    # 	url = aqt.qt.QUrl.fromEncoded(SEARCH_URL % (urllib.quote(encoded)))
-    #     aqt.qt.QDesktopServices.openUrl(url)
+        url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
+        QDesktopServices.openUrl(url)
     else:
         return _old(self, evt)
 
-aqt.reviewer.Reviewer._keyHandler = anki.hooks.wrap(aqt.reviewer.Reviewer._keyHandler, keyHandler, "around")
+reviewer.Reviewer._keyHandler = anki.hooks.wrap(reviewer.Reviewer._keyHandler, keyHandler, "around")
+
+
+
+def selected_text_as_query(web_view):
+    sel = web_view.page().selectedText()
+    return " ".join(sel.split())
+
+def on_search_for_selection(web_view):
+    sel_encode = selected_text_as_query(web_view).encode('utf8', 'ignore')
+    #need to do this the long way around to avoid double % encoding
+    url = QUrl.fromEncoded(SEARCH_URL % (urllib.quote(sel_encode)))
+    QDesktopServices.openUrl(url)
+
+
+def contextMenuEvent(self, evt):
+    # lazy: only run in reviewer
+    import aqt
+    if aqt.mw.state != "review":
+        return
+    m = aqt.qt.QMenu(self)
+    a = m.addAction(_("Copy"))
+    a.connect(a, aqt.qt.SIGNAL("triggered()"),
+              lambda: self.triggerPageAction(QWebPage.Copy))
+    #Only change is the following statement
+    anki.hooks.runHook("AnkiWebView.contextMenuEvent",self,m)
+    m.popup(QCursor.pos())
+
+def insert_search_menu_action(anki_web_view,m):
+    selected = selected_text_as_query(anki_web_view)
+    truncated = (selected[:40] + '..') if len(selected) > 40 else selected
+    a = m.addAction('Search for "%s" on Jisho ' % truncated)
+    a.connect(a, SIGNAL("triggered()"),
+         lambda wv=anki_web_view: on_search_for_selection(wv))
+
+
+AnkiWebView.contextMenuEvent = contextMenuEvent
+anki.hooks.addHook("AnkiWebView.contextMenuEvent", insert_search_menu_action)
