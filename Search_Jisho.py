@@ -1,22 +1,25 @@
 """
 An add-on that provides extra functionality for studying Japanese using Anki.
 
-Press 7 to search Jisho.org for the text following ';' in the answer field of the current card - for my cards, this is the example sentence
-corresponding to the vocabulary word in the question field of the card.
+Press 6 to search Jisho.org for the text in the question field of the current card.
+Press 7 to search Jisho for sentences containing the question text.
+Press 8 to search Jisho for kanji details for the question text.
 
-Press 8 to search Jisho.org for the text in the question field of the current card.
-Press 9 to search Jisho for sentences containing the question text.
-Press 0 to search Jisho for kanji details for the question text.
+Press 9 to search Jisho.org for the text following ';' in the answer field of the current card - for my cards, this is the example sentence
+corresponding to the vocabulary word in the question field of the card.
+Press 0 to search Jisho for the translation of the example sentence in the answer field of the card.
 
 Also adds option in context menu to search Jisho for the currently highlighted text.
 (I used the 'Search Google Images for selected words' add-on as a starting point: https://ankiweb.net/shared/info/800190862)
 """
 
-ANSWER_SEARCH_KEY = "7"
-QUESTION_SEARCH_KEY = "8"
-QUESTION_SENTENCES_SEARCH_KEY  = "9"
-QUESTION_KANJI_DETAILS_SEARCH_KEY = "0"
+QUESTION_SEARCH_KEY = "6" # search Jisho for the text in the question field of this card (to see related words, a more detailed definition, etc.)
+QUESTION_SENTENCES_SEARCH_KEY  = "7" # search Jisho for sentences containing the text in the question field of this card
+QUESTION_KANJI_DETAILS_SEARCH_KEY = "8" # search Jisho for the details of kanji occurring in the question field of this card
 
+ANSWER_SEARCH_KEY = "9" # search Jisho for the example sentence (to see readings/definitions of vocabulary in sentence)
+ANSWER_SENTENCE_FIND_KEY = "0" # search Jisho for the translation of the example sentence in the answer section of this card
+ANSWER_SENTENCE_DELIMITER = ";" # marks the beginning of the example sentence in the answer section
 
 SEARCH_URL = 'http://jisho.org/search/%s'
 SEARCH_SENTENCES_URL = 'http://jisho.org/search/%s%%20%%23sentences'
@@ -31,17 +34,22 @@ import urllib
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
-    if key == ANSWER_SEARCH_KEY:
+    if key == ANSWER_SEARCH_KEY or key == ANSWER_SENTENCE_FIND_KEY:
         a = mw.reviewer.card.a()
         a_start_index = a.rfind(">") + 1
         answer = a[a_start_index:]
-        sentence_start_index = answer.find(";") + 1
-        if sentence_start_index <= 0:
+        sentence_start_index = answer.find(ANSWER_SENTENCE_DELIMITER) + 2
+        if sentence_start_index <= 1:
             raise Exception('No sample sentence found')
-        answer = answer[sentence_start_index:]
+        answer = answer[sentence_start_index+5:] # +5 to remove &nbsp from search
 
-        encoded = answer.encode('utf8', 'ignore')
-        search = SEARCH_URL
+        if key == ANSWER_SEARCH_KEY:
+            encoded = answer.encode('utf8', 'ignore')
+            search = SEARCH_URL
+        else:
+            encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer - the period - so that the sentence will be found on Jisho
+            search = SEARCH_SENTENCES_URL
+
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
@@ -74,6 +82,7 @@ def keyHandler(self, evt, _old):
           search = SEARCH_SENTENCES_URL
         else:
           search = SEARCH_KANJI_DETAILS_URL
+          encoded = question.encode('utf8', 'ignore') # in this case, we don't want to ignore punctuation; i.e. q = "ひつよう (必要)"
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
