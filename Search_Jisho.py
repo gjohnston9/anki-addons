@@ -1,7 +1,8 @@
 """
 An add-on that provides extra functionality for studying Japanese using Anki.
 
-Press 7 to search Jisho.org for the text following ';' in the answer field of the current card.
+Press 7 to search Jisho.org for the text following ';' in the answer field of the current card - for my cards, this is the example sentence
+corresponding to the vocabulary word in the question field of the card.
 
 Press 8 to search Jisho.org for the text in the question field of the current card.
 Press 9 to search Jisho for sentences containing the question text.
@@ -10,6 +11,12 @@ Press 0 to search Jisho for kanji details for the question text.
 Also adds option in context menu to search Jisho for the currently highlighted text.
 (I used the 'Search Google Images for selected words' add-on as a starting point: https://ankiweb.net/shared/info/800190862)
 """
+
+ANSWER_SEARCH_KEY = "7"
+QUESTION_SEARCH_KEY = "8"
+QUESTION_SENTENCES_SEARCH_KEY  = "9"
+QUESTION_KANJI_DETAILS_SEARCH_KEY = "0"
+
 
 SEARCH_URL = 'http://jisho.org/search/%s'
 SEARCH_SENTENCES_URL = 'http://jisho.org/search/%s%%20%%23sentences'
@@ -24,7 +31,7 @@ import urllib
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
-    if key == "7":
+    if key == ANSWER_SEARCH_KEY:
         a = mw.reviewer.card.a()
         a_start_index = a.rfind(">") + 1
         answer = a[a_start_index:]
@@ -38,7 +45,7 @@ def keyHandler(self, evt, _old):
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
-    elif key == "8" or key == "9" or key == "0":
+    elif key == QUESTION_SEARCH_KEY or key == QUESTION_SENTENCES_SEARCH_KEY or key == QUESTION_KANJI_DETAILS_SEARCH_KEY:
         q = mw.reviewer.card.q()
         q_start_index = q.rfind(">") + 1
         question = q[q_start_index:]
@@ -61,9 +68,9 @@ def keyHandler(self, evt, _old):
             num = ord(unicode(question[q_end_index]))
 
         encoded = question[:q_end_index].encode('utf8', 'ignore')
-        if key == "8":
+        if key == QUESTION_SEARCH_KEY:
           search = SEARCH_URL
-        elif key == "9":
+        elif key == QUESTION_SENTENCES_SEARCH_KEY:
           search = SEARCH_SENTENCES_URL
         else:
           search = SEARCH_KANJI_DETAILS_URL
