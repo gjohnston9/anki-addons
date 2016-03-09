@@ -1,6 +1,9 @@
 """
 An add-on that provides extra functionality for studying Japanese using Anki.
 
+Press 7 to search Jisho.org for the text following ';' in the answer field of the current card - for my cards, this is the example sentence
+corresponding to the vocabulary word in the question field of the card.
+
 Press 8 to search Jisho.org for the text in the question field of the current card.
 Press 9 to search Jisho for sentences containing the question text.
 Press 0 to search Jisho for kanji details for the question text.
@@ -8,6 +11,12 @@ Press 0 to search Jisho for kanji details for the question text.
 Also adds option in context menu to search Jisho for the currently highlighted text.
 (I used the 'Search Google Images for selected words' add-on as a starting point: https://ankiweb.net/shared/info/800190862)
 """
+
+ANSWER_SEARCH_KEY = "7"
+QUESTION_SEARCH_KEY = "8"
+QUESTION_SENTENCES_SEARCH_KEY  = "9"
+QUESTION_KANJI_DETAILS_SEARCH_KEY = "0"
+
 
 SEARCH_URL = 'http://jisho.org/search/%s'
 SEARCH_SENTENCES_URL = 'http://jisho.org/search/%s%%20%%23sentences'
@@ -22,10 +31,24 @@ import urllib
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
-    if key == "8" or key == "9" or key == "0":
+    if key == ANSWER_SEARCH_KEY:
+        a = mw.reviewer.card.a()
+        a_start_index = a.rfind(">") + 1
+        answer = a[a_start_index:]
+        sentence_start_index = answer.find(";") + 1
+        if sentence_start_index <= 0:
+            raise Exception('No sample sentence found')
+        answer = answer[sentence_start_index:]
+
+        encoded = answer.encode('utf8', 'ignore')
+        search = SEARCH_URL
+        url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
+        QDesktopServices.openUrl(url)
+
+    elif key == QUESTION_SEARCH_KEY or key == QUESTION_SENTENCES_SEARCH_KEY or key == QUESTION_KANJI_DETAILS_SEARCH_KEY:
         q = mw.reviewer.card.q()
-        start_index = q.rfind(">") + 1
-        question = q[start_index:]
+        q_start_index = q.rfind(">") + 1
+        question = q[q_start_index:]
         
         """
         unicode ranges:
@@ -36,23 +59,24 @@ def keyHandler(self, evt, _old):
         U+30A1-U+30FA 12449-12538 katakana
         """
 
-        end_index = 0
+        q_end_index = 0
         num = ord(unicode(question[0]))
         while (19968 <= num <= 40895) or (12353 <= num <= 12438) or (12449 <= num <= 12538):
-            end_index = end_index + 1
-            if end_index >= len(question):
+            q_end_index = q_end_index + 1
+            if q_end_index >= len(question):
                 break
-            num = ord(unicode(question[end_index]))
+            num = ord(unicode(question[q_end_index]))
 
-        encoded = question[:end_index].encode('utf8', 'ignore')
-        if key == "8":
-        	search = SEARCH_URL
-        elif key == "9":
-        	search = SEARCH_SENTENCES_URL
+        encoded = question[:q_end_index].encode('utf8', 'ignore')
+        if key == QUESTION_SEARCH_KEY:
+          search = SEARCH_URL
+        elif key == QUESTION_SENTENCES_SEARCH_KEY:
+          search = SEARCH_SENTENCES_URL
         else:
-        	search = SEARCH_KANJI_DETAILS_URL
+          search = SEARCH_KANJI_DETAILS_URL
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
+
     else:
         return _old(self, evt)
 
