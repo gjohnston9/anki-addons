@@ -81,7 +81,8 @@ def keyHandler(self, evt, _old):
         elif key == QUESTION_SENTENCES_SEARCH_KEY:
           search = SEARCH_SENTENCES_URL
         else:
-          search = SEARCH_KANJI_DETAILS_URL # TODO: search for entire question field here; i.e. q = "ひつよう (必要)"
+          search = SEARCH_KANJI_DETAILS_URL
+          encoded = question.encode('utf8', 'ignore') # in this case, we don't want to ignore punctuation; i.e. q = "ひつよう (必要)"
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
