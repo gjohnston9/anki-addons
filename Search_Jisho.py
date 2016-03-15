@@ -41,12 +41,13 @@ def keyHandler(self, evt, _old):
         sentence_start_index = answer.find(ANSWER_SENTENCE_DELIMITER) + 2
         if sentence_start_index <= 1:
             raise Exception('No sample sentence found')
-        answer = answer[sentence_start_index+5:] # +5 to remove &nbsp from search
+        answer = answer[sentence_start_index:]
 
         if key == ANSWER_SEARCH_KEY:
             encoded = answer.encode('utf8', 'ignore')
             search = SEARCH_URL
         else:
+            answer = answer[5:] # to remove &nbsp from search, otherwise sentence won't be found on Jisho
             encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer - the period - so that the sentence will be found on Jisho
             search = SEARCH_SENTENCES_URL
 
