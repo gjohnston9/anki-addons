@@ -14,8 +14,8 @@ Also adds option in context menu to search Jisho for the currently highlighted t
 """
 
 QUESTION_SEARCH_KEY = "6" # search Jisho for the text in the question field of this card (to see related words, a more detailed definition, etc.)
-QUESTION_SENTENCES_SEARCH_KEY  = "7" # search Jisho for sentences containing the text in the question field of this card
-QUESTION_KANJI_DETAILS_SEARCH_KEY = "8" # search Jisho for the details of kanji occurring in the question field of this card
+QUESTION_SENTENCES_SEARCH_KEY  = "8" # search Jisho for sentences containing the text in the question field of this card
+QUESTION_KANJI_DETAILS_SEARCH_KEY = "7" # search Jisho for the details of kanji occurring in the question field of this card
 
 ANSWER_SEARCH_KEY = "9" # search Jisho for the example sentence (to see readings/definitions of vocabulary in sentence)
 ANSWER_SENTENCE_FIND_KEY = "0" # search Jisho for the translation of the example sentence in the answer section of this card
@@ -43,11 +43,13 @@ def keyHandler(self, evt, _old):
             raise Exception('No sample sentence found')
         answer = answer[sentence_start_index:]
 
+        if answer[:5] == 'nbsp;':
+            answer = answer[5:]
+
         if key == ANSWER_SEARCH_KEY:
             encoded = answer.encode('utf8', 'ignore')
             search = SEARCH_URL
         else:
-            answer = answer[5:] # to remove &nbsp from search, otherwise sentence won't be found on Jisho
             encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer - the period - so that the sentence will be found on Jisho
             search = SEARCH_SENTENCES_URL
 
