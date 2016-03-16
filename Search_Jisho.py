@@ -14,8 +14,8 @@ Also adds option in context menu to search Jisho for the currently highlighted t
 """
 
 QUESTION_SEARCH_KEY = "6" # search Jisho for the text in the question field of this card (to see related words, a more detailed definition, etc.)
-QUESTION_SENTENCES_SEARCH_KEY  = "8" # search Jisho for sentences containing the text in the question field of this card
 QUESTION_KANJI_DETAILS_SEARCH_KEY = "7" # search Jisho for the details of kanji occurring in the question field of this card
+QUESTION_SENTENCES_SEARCH_KEY  = "8" # search Jisho for sentences containing the text in the question field of this card
 
 ANSWER_SEARCH_KEY = "9" # search Jisho for the example sentence (to see readings/definitions of vocabulary in sentence)
 ANSWER_SENTENCE_FIND_KEY = "0" # search Jisho for the translation of the example sentence in the answer section of this card
