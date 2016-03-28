@@ -50,6 +50,7 @@ def keyHandler(self, evt, _old):
             encoded = answer.encode('utf8', 'ignore')
             search = SEARCH_URL
         else:
+            #TODO: remove pronunciations added in (like "その状態[じょうたい]です。")
             encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer - the period - so that the sentence will be found on Jisho
             search = SEARCH_SENTENCES_URL
 
