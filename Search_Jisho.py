@@ -13,6 +13,8 @@ Also adds option in context menu to search Jisho for the currently highlighted t
 (I used the 'Search Google Images for selected words' add-on as a starting point: https://ankiweb.net/shared/info/800190862)
 """
 
+SENTENCE_PASTE_KEY = "5"
+
 QUESTION_SEARCH_KEY = "6" # search Jisho for the text in the question field of this card (to see related words, a more detailed definition, etc.)
 QUESTION_KANJI_DETAILS_SEARCH_KEY = "7" # search Jisho for the details of kanji occurring in the question field of this card
 QUESTION_SENTENCES_SEARCH_KEY  = "8" # search Jisho for sentences containing the text in the question field of this card
@@ -43,15 +45,26 @@ def keyHandler(self, evt, _old):
             raise Exception('No sample sentence found')
         answer = answer[sentence_start_index:]
 
+        
+
         if answer[:5] == 'nbsp;':
             answer = answer[5:]
+
+        # remove readings in brackets from example sentence (like "その状態[じょうたい]です。")
+        while (True):
+            left = answer.find("[")
+            right = answer.find("]")
+            if left > 0 and right > 0:
+                answer = answer[:left] + answer[right + 1:]
+            else:
+                break
+
 
         if key == ANSWER_SEARCH_KEY:
             encoded = answer.encode('utf8', 'ignore')
             search = SEARCH_URL
         else:
-            #TODO: remove pronunciations added in (like "その状態[じょうたい]です。")
-            encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer - the period - so that the sentence will be found on Jisho
+            encoded = answer[:len(answer)-1].encode('utf8', 'ignore') # remove last character of answer (the period) so that the sentence will be found on Jisho
             search = SEARCH_SENTENCES_URL
 
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
@@ -89,6 +102,19 @@ def keyHandler(self, evt, _old):
           encoded = question.encode('utf8', 'ignore') # in this case, we don't want to ignore punctuation; i.e. q = "ひつよう (必要)"
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
+
+    elif key == SENTENCE_PASTE_KEY:
+        print 'do stuff'
+
+        string = '' # todo: get string from clipboard
+
+        while (True):
+            left = string.find('\n')
+            right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of \n\
+            if left >= right:
+                break
+            else:
+                string = string[:left] + string[right+1:]
 
     else:
         return _old(self, evt)
