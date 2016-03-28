@@ -34,6 +34,8 @@ from aqt.utils import tooltip
 import anki.hooks
 import urllib
 
+from Tkinter import Tk
+
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
     if key == ANSWER_SEARCH_KEY or key == ANSWER_SENTENCE_FIND_KEY:
@@ -104,10 +106,8 @@ def keyHandler(self, evt, _old):
         QDesktopServices.openUrl(url)
 
     elif key == SENTENCE_PASTE_KEY:
-        print 'do stuff'
-
-        string = '' # todo: get string from clipboard
-
+        r = Tk()
+        string = r.selection_get(selection = "CLIPBOARD")
         while (True):
             left = string.find('\n')
             right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of \n\
@@ -115,6 +115,10 @@ def keyHandler(self, evt, _old):
                 break
             else:
                 string = string[:left] + string[right+1:]
+
+        # TODO: append string to end of answer (and add '; ' in between?)
+
+        r.destroy()
 
     else:
         return _old(self, evt)
