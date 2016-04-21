@@ -34,7 +34,7 @@ from aqt.utils import tooltip
 import anki.hooks
 import urllib
 
-from Tkinter import Tk
+# from Tkinter import Tk
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
@@ -88,11 +88,12 @@ def keyHandler(self, evt, _old):
 
         q_end_index = 0
         num = ord(unicode(question[0]))
-        while (19968 <= num <= 40895) or (12353 <= num <= 12438) or (12449 <= num <= 12538):
+        while (19968 <= num <= 40895) or (12353 <= num <= 12438) or (12449 <= num <= 12538) or (num == 12293): # last one is for 々 character
             q_end_index = q_end_index + 1
             if q_end_index >= len(question):
                 break
-            num = ord(unicode(question[q_end_index]))
+            else:
+                num = ord(unicode(question[q_end_index]))
 
         encoded = question[:q_end_index].encode('utf8', 'ignore')
         if key == QUESTION_SEARCH_KEY:
@@ -105,20 +106,20 @@ def keyHandler(self, evt, _old):
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
-    elif key == SENTENCE_PASTE_KEY:
-        r = Tk()
-        string = r.selection_get(selection = "CLIPBOARD")
-        while (True):
-            left = string.find('\n')
-            right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of \n\
-            if left >= right:
-                break
-            else:
-                string = string[:left] + string[right+1:]
+    # elif key == SENTENCE_PASTE_KEY:
+    #     r = Tk()
+    #     string = r.selection_get(selection = "CLIPBOARD")
+    #     while (True):
+    #         left = string.find('\n')
+    #         right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of \n\
+    #         if left >= right:
+    #             break
+    #         else:
+    #             string = string[:left] + string[right+1:]
 
-        # TODO: append string to end of answer (and add '; ' in between?)
+    #     # TODO: append string to end of answer (and add '; ' in between?)
 
-        r.destroy()
+    #     r.destroy()
 
     else:
         return _old(self, evt)
