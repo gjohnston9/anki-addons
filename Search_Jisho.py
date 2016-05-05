@@ -94,11 +94,12 @@ def keyHandler(self, evt, _old):
 
         q_end_index = 0
         num = ord(unicode(question[0]))
-        while (19968 <= num <= 40895) or (12353 <= num <= 12438) or (12449 <= num <= 12538):
+        while (19968 <= num <= 40895) or (12353 <= num <= 12438) or (12449 <= num <= 12538) or (num == 12293): # last one is for 々 character
             q_end_index = q_end_index + 1
             if q_end_index >= len(question):
                 break
-            num = ord(unicode(question[q_end_index]))
+            else:
+                num = ord(unicode(question[q_end_index]))
 
         encoded = question[:q_end_index].encode('utf8', 'ignore')
         if key == QUESTION_SEARCH_KEY:
@@ -125,6 +126,7 @@ def keyHandler(self, evt, _old):
         # # TODO: append string to end of card answer (and add '; ' in between?)
 
         # r.destroy()
+
 
     else:
         return _old(self, evt)
