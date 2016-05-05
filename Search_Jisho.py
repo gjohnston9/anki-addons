@@ -23,6 +23,8 @@ ANSWER_SEARCH_KEY = "9" # search Jisho for the example sentence (to see readings
 ANSWER_SENTENCE_FIND_KEY = "0" # search Jisho for the translation of the example sentence in the answer section of this card
 ANSWER_SENTENCE_DELIMITER = ";" # marks the beginning of the example sentence in the answer section
 
+TEST_KEY = ";"
+
 SEARCH_URL = 'http://jisho.org/search/%s'
 SEARCH_SENTENCES_URL = 'http://jisho.org/search/%s%%20%%23sentences'
 SEARCH_KANJI_DETAILS_URL = 'http://jisho.org/search/%s%%20%%23kanji'
@@ -34,11 +36,17 @@ from aqt.utils import tooltip
 import anki.hooks
 import urllib
 
-from Tkinter import Tk
+# from Tkinter import Tk
 
 def keyHandler(self, evt, _old):
     key = unicode(evt.text())
-    if key == ANSWER_SEARCH_KEY or key == ANSWER_SENTENCE_FIND_KEY:
+    if key == TEST_KEY:
+        answer = mw.reviewer.card.a()
+        encoded = answer.encode('utf8', 'ignore')
+        search = SEARCH_URL
+        url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
+        QDesktopServices.openUrl(url)
+    elif key == ANSWER_SEARCH_KEY or key == ANSWER_SENTENCE_FIND_KEY:
         a = mw.reviewer.card.a()
         a_start_index = a.rfind(">") + 1
         answer = a[a_start_index:]
@@ -46,8 +54,6 @@ def keyHandler(self, evt, _old):
         if sentence_start_index <= 1:
             raise Exception('No sample sentence found')
         answer = answer[sentence_start_index:]
-
-        
 
         if answer[:5] == 'nbsp;':
             answer = answer[5:]
@@ -101,24 +107,24 @@ def keyHandler(self, evt, _old):
           search = SEARCH_SENTENCES_URL
         else:
           search = SEARCH_KANJI_DETAILS_URL
-          encoded = question.encode('utf8', 'ignore') # in this case, we don't want to ignore punctuation; i.e. q = "ひつよう (必要)"
+          encoded = question.encode('utf8', 'ignore') # in this case, we don't want to ignore punctuation; i.e. q ='"ひつよう (必要)'
         url = QUrl.fromEncoded(search % (urllib.quote(encoded)))
         QDesktopServices.openUrl(url)
 
-    elif key == SENTENCE_PASTE_KEY:
-        r = Tk()
-        string = r.selection_get(selection = "CLIPBOARD")
-        while (True):
-            left = string.find('\n')
-            right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of \n\
-            if left >= right:
-                break
-            else:
-                string = string[:left] + string[right+1:]
+    # elif key == SENTENCE_PASTE_KEY:
+        # r = Tk()
+        # string = r.selection_get(selection = "CLIPBOARD")
+        # while (True): # remove newline characters and the text in between them (readings of words in this case)
+        #     left = string.find('\n')
+        #     right = string.replace('\n', '\\', 1).find('\n') # find second occurrence of '\n'
+        #     if left >= right:
+        #         break
+        #     else:
+        #         string = string[:left] + string[right+1:]
 
-        # TODO: append string to end of answer (and add '; ' in between?)
+        # # TODO: append string to end of card answer (and add '; ' in between?)
 
-        r.destroy()
+        # r.destroy()
 
     else:
         return _old(self, evt)
